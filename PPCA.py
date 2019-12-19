@@ -1,4 +1,4 @@
-hej hej
+
 import random as rnd
 
 
@@ -10,8 +10,6 @@ DP = [None, 0.8, 0.8, 0.8]
 
 frames = 10
 dimensions = 10
-
-# acceptance = 0.7
 
 
 class Cell:
