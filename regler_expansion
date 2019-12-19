@@ -1,0 +1,28 @@
+vegetation system:
+
+each gridcell has a vegetation stat ([0, 100]?:
+  increases by dVeg0 when empty
+  increases by dVec2 when low level pred 
+  increases by dVeg3 when top pred 
+  decreases by dVeg1 when herbivore
+ 
+ each type of animal has a hungerstat and a healthstat
+  animal.hunger: between [0, 100]
+  animal.health: between [0, 100]
+  
+  critical hunger is at 50:
+   malnutrition, health increases/decreases proportional (^n?) to difference to 50.
+  if health = 0:
+    dies
+  
+  herbivores has an increase in hunger stat when on a cell with vegetation (or above threshhold(10?))
+  predators has an increase in hunger stat when eating (different increases?)
+
+movement system:
+  animals cant see the situation on a cell before moving there (hence random).
+  herbivores change to a random cell if vegetation is below a threshhold (10?)
+    herbivores dies if moving to predator or cant move to predator. 
+  
+  predators move to a random gridcell
+    maybe not to where another animal is?
+  
