@@ -1,11 +1,15 @@
 import random as rnd
+import numpy as np
+import matplotlib
+matplotlib.use('TKAgg')
+import matplotlib.pyplot as plt
 
 
 # 1 = prey, 2 = low_pred, 3 = top_pred
 # Vector of desired species
 species = [0, 1, 2, 3]
-BP = [None, 0.7, 0.4, 0.3]
-DP = [None, 0.5, 0.2, 0.2]
+BP = [None, 0.5, 0.4, 0.3]
+DP = [None, 0.8, 0.005, 0.001]
 
 frames = 10
 dimensions = 10
@@ -88,7 +92,7 @@ def check_neighbours(i, j, grid):
                     top_pred += 1
                     top_pred_indices.append([s, t])
 
-    print(prey_indices, low_pred_indices, top_pred_indices)
+    # print(prey_indices, low_pred_indices, top_pred_indices)
 
     return prey, low_pred, top_pred, prey_indices, low_pred_indices, top_pred_indices
 
@@ -337,6 +341,32 @@ def cellular_automaton(dim, steps):
     return grid
 
 
-ca = cellular_automaton(dimensions, frames)
-ans = counter(ca, dimensions)
-print('After returning value: ' + str(ans))
+def run_several_ca():
+    # Iterates over tries ans performs cellular automaton many times for same initial values
+    tries = 100
+    prey_list = np.zeros(tries)
+    low_pred_list = np.zeros(tries)
+    top_pred_list = np.zeros(tries)
+
+    for tri in range(tries):
+        ca = cellular_automaton(dimensions, frames)
+        ans = counter(ca, dimensions)
+        prey_list[tri] = ans[1]
+        low_pred_list[tri] = ans[2]
+        top_pred_list[tri] = ans[3]
+
+    plot_statistics(prey_list, low_pred_list, top_pred_list, tries)
+
+
+def plot_statistics(prey_list, low_pred_list, top_pred_list, x_value):
+    # Plots animal populations
+    plt.plot(prey_list, label = 'Population of prey')
+    plt.plot(low_pred_list, label = 'Population of low level predators')
+    plt.plot(top_pred_list, label = 'Population of top level predators')
+    plt.xlabel(str(x_value))
+    plt.ylabel('N.o. animals')
+    plt.legend()
+    plt.show()
+
+
+run_several_ca()
