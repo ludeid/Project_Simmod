@@ -1,4 +1,3 @@
-
 import random as rnd
 
 
@@ -89,7 +88,9 @@ def check_neighbours(i, j, grid):
                     top_pred += 1
                     top_pred_indices.append([s, t])
 
-    return prey, low_pred, top_pred
+    print(prey_indices, low_pred_indices, top_pred_indices)
+
+    return prey, low_pred, top_pred, prey_indices, low_pred_indices, top_pred_indices
 
 
 def check_eaten_neighbours(i, j, grid):
@@ -148,7 +149,7 @@ def counter(grid, dim):
 def attack(place, i, j, grid):
 
     # Checks what animals are inhabiting surrounding cells
-    [prey, low_pred, top_pred] = check_neighbours(i, j, grid)
+    [prey, low_pred, top_pred, prey_indices, low_pred_indices, top_pred_indices] = check_neighbours(i, j, grid)
 
     # Cell contains a prey
     if (place.kind == 1) and (low_pred > 0):
@@ -185,6 +186,7 @@ def attack(place, i, j, grid):
         if (1 - ((1 - Cell(1).deathprob) ** prey) >= r) and (place.kind == 2):
             assert place.kind == 2
             place.state = 3
+            int(rnd.random() * 4)
             # possible error: prey never dies here
             # print(place.kind)
 
@@ -193,6 +195,7 @@ def attack(place, i, j, grid):
         r = rnd.random()
         if (1 - (1 - Cell(2).deathprob) ** low_pred) >= r:
             place.state = 2
+            int(rnd.random() * 4)
             # print(place.kind)
 
     healthy(place)
@@ -203,7 +206,7 @@ def attack(place, i, j, grid):
 def reproduction(place, i, j, grid):
 
     # Checks what animals are inhabiting surrounding cells
-    [prey, low_pred, top_pred] = check_neighbours(i, j, grid)
+    [prey, low_pred, top_pred, prey_indices, low_pred_indices, top_pred_indices] = check_neighbours(i, j, grid)
     [low_eaten, top_eaten] = check_eaten_neighbours(i, j, grid)
 
     if place.kind == 2:
