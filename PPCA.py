@@ -8,11 +8,12 @@ import matplotlib.pyplot as plt
 # 1 = prey, 2 = low_pred, 3 = top_pred
 # Vector of desired species
 species = [0, 1, 2, 3]
-BP = [None, 0.5, 0.4, 0.3]
-DP = [None, 0.8, 0.005, 0.001]
+BP = [None, 0.3, 0.4, 0.2]
+DP = [None, None, 0.001, 0.001]
+CP = [None, 0.9, 0.7, None]
 
-frames = 10
-dimensions = 10
+frames = 100
+dimensions = 25
 
 
 class Cell:
@@ -21,19 +22,24 @@ class Cell:
         self.state = 1      # States of cell, 1 = before attack, 2 = after top attack, 3 = after low attack
         self.birthprob = None
         self.deathprob = None
+        self.catchprob = None
 
         if kind == 0:
             self.birthprob = BP[0]  # is decided from name
             self.deathprob = DP[0]  # is decided from name
+            self.catchprob = CP[0]  # is decided from name
         elif kind == 1:
             self.birthprob = BP[1]  # is decided from name
             self.deathprob = DP[1]  # is decided from name
+            self.catchprob = CP[1]  # is decided from name
         elif kind == 2:
             self.birthprob = BP[2]  # is decided from name
             self.deathprob = DP[2]  # is decided from name
+            self.catchprob = CP[2]  # is decided from name
         elif kind == 3:
             self.birthprob = BP[3]  # is decided from name
             self.deathprob = DP[3]  # is decided from name
+            self.catchprob = CP[3]  # is decided from name
 
 
 def healthy(place):
@@ -159,55 +165,51 @@ def attack(place, i, j, grid):
     if (place.kind == 1) and (low_pred > 0):
 
         # Probability of prey surviving low level predator
-        survive_prob = (1 - Cell(1).deathprob) ** low_pred
+        survive_prob = (1 - Cell(1).catchprob) ** low_pred
 
         # checks if low predator eats prey
         # assigns state = 3 to eaten by low level predator
         r = rnd.random()
         if survive_prob < r:
-            place.kind = 0
+            place = Cell(0)
             place.state = 3
-            place.birthprob = BP[0]
-            place.deathprob = BP[0]
 
     # Cell contains a low level predator
     elif place.kind == 2:
 
         # Probability of prey surviving top level predator
-        survive_prob = (1 - Cell(2).deathprob) ** top_pred
+        survive_prob = (1 - Cell(2).catchprob) ** top_pred
 
         # checks if top level predator eats low level predator
         # assigns state = 2 to eaten by top level predator
         r = rnd.random()
         if (top_pred > 0) and (survive_prob < r):
-            place.kind = 0
+            place = Cell(0)
             place.state = 2
-            place.birthprob = BP[0]
-            place.deathprob = BP[0]
 
         # Checks if low level predator attacks prey in neighbourhood
-        if (1 - ((1 - Cell(1).deathprob) ** prey) >= r) and (place.kind == 2) and (prey > 0):
-            assert place.kind == 2
-            place.state = 3
-            int(rnd.random() * len(prey_indices))
+        if (1 - ((1 - Cell(1).catchprob) ** prey) >= r) and (place.kind == 2) and (prey > 0):
+            place.state = 3         # Indicates the predator has eaten
+
+            # Removes one of the preys (that has now been eaten by the low predator)
             remove_index = int(rnd.random() * len(prey_indices))
-            change_cell = grid[prey_indices[remove_index][0]][prey_indices[remove_index][1]]
-            change_cell.kind = 0
-            change_cell.state = 3
-            change_cell.birthprob = BP[0]
-            change_cell.deathprob = BP[0]
+
+            # Changes a random prey grid cell in neighbourhood to an empty cell with state = 3
+            grid[prey_indices[remove_index][0]][prey_indices[remove_index][1]] = Cell(0)
+            grid[prey_indices[remove_index][0]][prey_indices[remove_index][1]].state = 3
 
     # Cell contains top level predator
     elif place.kind == 3:
         r = rnd.random()
-        if (1 - (1 - Cell(2).deathprob) ** low_pred) >= r:
+        if (1 - (1 - Cell(2).catchprob) ** low_pred) >= r:
             place.state = 2
+
+            # Removes one of the low predators (that has now been eaten by the top predator)
             remove_index = int(rnd.random() * len(low_pred_indices))
-            change_cell = grid[low_pred_indices[remove_index][0]][low_pred_indices[remove_index][1]]
-            change_cell.kind = 0
-            change_cell.state = 2
-            change_cell.birthprob = BP[0]
-            change_cell.deathprob = BP[0]
+
+            # Changes a random prey grid cell in neighbourhood to an empty cell with state = 3
+            grid[low_pred_indices[remove_index][0]][low_pred_indices[remove_index][1]] = Cell(0)
+            grid[low_pred_indices[remove_index][0]][low_pred_indices[remove_index][1]].state = 2
 
     healthy(place)
 
@@ -225,20 +227,16 @@ def reproduction(place, i, j, grid):
         # Checks if low level predator dies by natural causes
         r = rnd.random()
         if Cell(2).deathprob >= r:
-            place.kind = 0
+            place = Cell(0)
             place.state = 1
-            place.birthprob = BP[0]
-            place.deathprob = DP[0]
 
     elif place.kind == 3:
 
         # Checks if top level predator dies by natural causes
         r = rnd.random()
         if Cell(3).deathprob >= r:
-            place.kind = 0
+            place = Cell(0)
             place.state = 1
-            place.birthprob = BP[0]
-            place.deathprob = DP[0]
 
     if place.kind == 0:
 
@@ -248,9 +246,7 @@ def reproduction(place, i, j, grid):
             repr_prob = 1 - (1 - Cell(1).birthprob) ** prey
             r = rnd.random()
             if (prey > 0) and (low_pred == 0) and (repr_prob >= r):
-                place.kind = 1      # Sets cells species/kind to prey = 1
-                place.birthprob = BP[1]
-                place.deathprob = DP[1]
+                place = Cell(1)     # Sets cells species/kind to prey = 1
 
         # Checks if the cell is empty due to top level predator attack (state = 2)
         # Top level predators that have eaten can reproduce with some probability
@@ -258,10 +254,7 @@ def reproduction(place, i, j, grid):
             repr_prob = 1 - (1 - Cell(3).birthprob) ** top_eaten
             r = rnd.random()
             if (top_eaten > 0) and (repr_prob >= r):
-                place.kind = 3      # Sets cells species/kind to low level predator = 2
-                place.state = 1     # Sets cells state to not eaten/before attack
-                place.birthprob = BP[3]
-                place.deathprob = DP[3]
+                place = Cell(3)     # Sets cells species/kind to top level predator = 3
 
         # Checks if the cell is empty due to low level predator attack (state = 3)
         # If no top level predators, low level predators that have eaten can reproduce with some probability
@@ -269,10 +262,8 @@ def reproduction(place, i, j, grid):
             repr_prob = 1 - (1 - Cell(2).birthprob) ** low_eaten
             r = rnd.random()
             if (low_eaten > 0) and (top_pred == 0) and (repr_prob >= r):
-                place.kind = 2  # Sets cells species/kind to low level predator = 2
-                place.state = 1  # Sets cells state to not eaten/before attack
-                place.birthprob = BP[2]
-                place.deathprob = DP[2]
+                place = Cell(2)     # Sets cells species/kind to low level predator = 2
+
             else:
                 place.state = 1
 
@@ -301,9 +292,6 @@ def update(dim, grid):
 
     new_grid = [[0]*dim]*dim
 
-    # ans2 = counter(grid, len(new_grid))
-    # print('This is grid before: ' + str(ans2))
-
     for i in range(dim):
         for j in range(dim):
             state = grid[i][j]
@@ -316,11 +304,7 @@ def update(dim, grid):
             state = new_grid[k][l]
             if state.kind != 1:
                 state = reproduction(state, k, l, grid)
-            # print(state.kind)
             new_grid[k][l] = state
-
-    # ans1 = counter(new_grid, len(new_grid))
-    # print('This is new grid: ' + str(ans1))
 
     return new_grid
 
@@ -343,7 +327,8 @@ def cellular_automaton(dim, steps):
 
 def run_several_ca():
     # Iterates over tries ans performs cellular automaton many times for same initial values
-    tries = 100
+    tries = 50
+    i = 0
     prey_list = np.zeros(tries)
     low_pred_list = np.zeros(tries)
     top_pred_list = np.zeros(tries)
@@ -354,6 +339,8 @@ def run_several_ca():
         prey_list[tri] = ans[1]
         low_pred_list[tri] = ans[2]
         top_pred_list[tri] = ans[3]
+        print(i)
+        i += 1
 
     plot_statistics(prey_list, low_pred_list, top_pred_list, tries)
 
