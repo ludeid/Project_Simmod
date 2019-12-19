@@ -4,8 +4,8 @@ import random as rnd
 # 1 = prey, 2 = low_pred, 3 = top_pred
 # Vector of desired species
 species = [0, 1, 2, 3]
-BP = [None, 0.2, 0.8, 0.8]
-DP = [None, 0.8, 0.8, 0.8]
+BP = [None, 0.7, 0.4, 0.3]
+DP = [None, 0.5, 0.2, 0.2]
 
 frames = 10
 dimensions = 10
@@ -161,7 +161,6 @@ def attack(place, i, j, grid):
         # assigns state = 3 to eaten by low level predator
         r = rnd.random()
         if survive_prob < r:
-            # print('I got here!')
             place.kind = 0
             place.state = 3
             place.birthprob = BP[0]
@@ -183,24 +182,32 @@ def attack(place, i, j, grid):
             place.deathprob = BP[0]
 
         # Checks if low level predator attacks prey in neighbourhood
-        if (1 - ((1 - Cell(1).deathprob) ** prey) >= r) and (place.kind == 2):
+        if (1 - ((1 - Cell(1).deathprob) ** prey) >= r) and (place.kind == 2) and (prey > 0):
             assert place.kind == 2
             place.state = 3
-            int(rnd.random() * 4)
-            # possible error: prey never dies here
-            # print(place.kind)
+            int(rnd.random() * len(prey_indices))
+            remove_index = int(rnd.random() * len(prey_indices))
+            change_cell = grid[prey_indices[remove_index][0]][prey_indices[remove_index][1]]
+            change_cell.kind = 0
+            change_cell.state = 3
+            change_cell.birthprob = BP[0]
+            change_cell.deathprob = BP[0]
 
     # Cell contains top level predator
     elif place.kind == 3:
         r = rnd.random()
         if (1 - (1 - Cell(2).deathprob) ** low_pred) >= r:
             place.state = 2
-            int(rnd.random() * 4)
-            # print(place.kind)
+            remove_index = int(rnd.random() * len(low_pred_indices))
+            change_cell = grid[low_pred_indices[remove_index][0]][low_pred_indices[remove_index][1]]
+            change_cell.kind = 0
+            change_cell.state = 2
+            change_cell.birthprob = BP[0]
+            change_cell.deathprob = BP[0]
 
     healthy(place)
 
-    return place
+    return place, grid
 
 
 def reproduction(place, i, j, grid):
@@ -214,9 +221,6 @@ def reproduction(place, i, j, grid):
         # Checks if low level predator dies by natural causes
         r = rnd.random()
         if Cell(2).deathprob >= r:
-            # print(Cell(2).deathprob)
-            # print('r = ' + str(r))
-            # print('Low level dör hela tiden!')
             place.kind = 0
             place.state = 1
             place.birthprob = BP[0]
@@ -227,9 +231,6 @@ def reproduction(place, i, j, grid):
         # Checks if top level predator dies by natural causes
         r = rnd.random()
         if Cell(3).deathprob >= r:
-            # print(Cell(3).deathprob)
-            # print('r = ' + str(r))
-            # print('Top level dör hela tiden!')
             place.kind = 0
             place.state = 1
             place.birthprob = BP[0]
@@ -303,7 +304,7 @@ def update(dim, grid):
         for j in range(dim):
             state = grid[i][j]
             if state.kind != 0:
-                state = attack(state, i, j, grid)
+                [state, grid] = attack(state, i, j, grid)
             new_grid[i][j] = state
 
     for k in range(dim):
