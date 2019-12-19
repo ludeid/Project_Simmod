@@ -21,8 +21,11 @@ each gridcell has a vegetation stat ([0, 100]?:
 movement system:
   animals cant see the situation on a cell before moving there (hence random).
   herbivores change to a random cell if vegetation is below a threshhold (10?)
-    herbivores dies if moving to predator or cant move to predator. 
+    herbivores dies if moving to predator or cant move to predator. Or decreases hunger alot
   
   predators move to a random gridcell
     maybe not to where another animal is?
+    
+  moving decreases hunger:
+    different for different animals
   
